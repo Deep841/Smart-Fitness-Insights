@@ -1,0 +1,146 @@
+library(shiny)
+library(shinydashboard)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(scales)
+
+# Load dataset
+data <- read_csv("smart_fitness_data.csv")
+
+# Prepare user dropdown with custom labels
+user_ids <- unique(data$User_ID)
+user_choices <- setNames(user_ids, paste("User", seq_along(user_ids)))
+
+# UI
+ui <- dashboardPage(
+  dashboardHeader(title = "Smart Fitness Insights"),
+  
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("chart-line")),
+      menuItem("AI Recommendations", tabName = "recommendations", icon = icon("robot")),
+      selectInput("activity", "Select Activity Type:", choices = unique(data$Activity_Type), selected = "Gym"),
+      selectInput("user", "Select User:", choices = user_choices, selected = user_ids[1])
+    )
+  ),
+  
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "dashboard",
+              fluidRow(
+                valueBoxOutput("heartBox"),
+                valueBoxOutput("stressBox"),
+                valueBoxOutput("stepsBox")
+              ),
+              fluidRow(
+                box(title = " Heart Rate vs Stress Trend", width = 6, status = "primary", solidHeader = TRUE,
+                    plotOutput("heart_stress_trend", height = 300)),
+                box(title = " Steps Count Distribution", width = 6, status = "info", solidHeader = TRUE,
+                    plotOutput("steps_distribution", height = 300))
+              ),
+              fluidRow(
+                box(title = " Calories Burned per Activity", width = 6, status = "warning", solidHeader = TRUE,
+                    plotOutput("calories_activity", height = 300)),
+                box(title = " Fatigue Risk Analysis", width = 6, status = "danger", solidHeader = TRUE,
+                    plotOutput("fatigue_risk", height = 300))
+              )
+      ),
+      
+      tabItem(tabName = "recommendations",
+              box(title = " AI-Driven Personalized Suggestions", width = 12, status = "success", solidHeader = TRUE,
+                  verbatimTextOutput("ai_workout_suggestions"))
+      )
+    )
+  )
+)
+
+# Server
+server <- function(input, output) {
+  
+  user_data <- reactive({
+    data %>% filter(User_ID == input$user)
+  })
+  
+  output$heartBox <- renderValueBox({
+    hr <- user_data()$Heart_Rate[1]
+    valueBox(hr, "Heart Rate (BPM)", icon = icon("heartbeat"), color = "red")
+  })
+  
+  output$stressBox <- renderValueBox({
+    st <- user_data()$Stress_Level[1]
+    valueBox(st, "Stress Level", icon = icon("exclamation-triangle"), color = "orange")
+  })
+  
+  output$stepsBox <- renderValueBox({
+    steps <- user_data()$Steps_Count[1]
+    valueBox(format(steps, big.mark = ","), "Steps Taken", icon = icon("shoe-prints"), color = "blue")
+  })
+  
+  output$heart_stress_trend <- renderPlot({
+    ggplot(data, aes(x = Heart_Rate, y = Stress_Level, color = Activity_Type)) +
+      geom_point(alpha = 0.6) +
+      geom_smooth(method = "lm", se = FALSE, linetype = "dashed") +
+      labs(title = "Heart Rate vs Stress Level", x = "Heart Rate", y = "Stress Level") +
+      theme_minimal()
+  })
+  
+  output$steps_distribution <- renderPlot({
+    ggplot(data, aes(x = Steps_Count)) +
+      geom_histogram(fill = "steelblue", bins = 25, alpha = 0.8) +
+      labs(title = "Steps Count Distribution", x = "Steps", y = "Frequency") +
+      theme_minimal()
+  })
+  
+  output$calories_activity <- renderPlot({
+    ggplot(data, aes(x = Activity_Type, y = Calories_Burned, fill = Activity_Type)) +
+      geom_boxplot() +
+      labs(title = "Calories Burned by Activity", x = "Activity", y = "Calories Burned") +
+      theme_minimal()
+  })
+  
+  output$fatigue_risk <- renderPlot({
+    ggplot(data, aes(x = Heart_Rate, y = Stress_Level, color = Activity_Type)) +
+      geom_point(size = 3, alpha = 0.6) +
+      geom_smooth(method = "lm", se = FALSE, linetype = "dashed") +
+      labs(title = "Fatigue Risk Analysis", x = "Heart Rate", y = "Stress Level") +
+      theme_minimal()
+  })
+  
+  output$ai_workout_suggestions <- renderText({
+    user <- user_data()
+    if (nrow(user) == 0) return("No data available for this user.")
+    
+    heart_rate <- user$Heart_Rate[1]
+    stress_level <- user$Stress_Level[1]
+    steps <- user$Steps_Count[1]
+    calories <- user$Calories_Burned[1]
+    activity <- user$Activity_Type[1]
+    
+    suggestions <- "--- AI-Powered Fitness Insights ---\n\n"
+    
+    suggestions <- paste0(suggestions, "1: Personalized Workout Adjustments:\n")
+    suggestions <- paste0(suggestions,
+                          if (steps < 5000) "- Increase daily steps with short walks.\n" else "- Maintain or increase with jogging.\n")
+    
+    suggestions <- paste0(suggestions, "\n2:  Fatigue Detection & Recovery:\n")
+    suggestions <- paste0(suggestions,
+                          if (heart_rate > 140 & stress_level > 7) "- High fatigue! Rest or do light yoga.\n"
+                          else "- You're fine! Hydrate and stay active.\n")
+    
+    suggestions <- paste0(suggestions, "\n3:  Smart Lifestyle Tips:\n")
+    if (activity == "Gym" & calories < 400)
+      suggestions <- paste0(suggestions, "- Boost cardio or strength to burn more calories.\n")
+    if (activity == "Yoga" & stress_level > 5)
+      suggestions <- paste0(suggestions, "- Focus on breathwork and relaxation techniques.\n")
+    
+    suggestions <- paste0(suggestions, "\n4: Auto-Adjusted Plan:\n")
+    if (heart_rate < 90 & steps > 10000)
+      suggestions <- paste0(suggestions, "- Slightly increase workout intensity.\n")
+    
+    return(suggestions)
+  })
+}
+
+# Run the app
+shinyApp(ui, server)
