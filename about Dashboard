@@ -1,0 +1,39 @@
+Dashboard : 
+
+  -Dashboard :
+    --it is the dashboard for user (:user31) and physical acivity is(:yoga)
+    --this dashboard is divided into Row-wise consisiting of 3 Rows in which :
+      ---the 1st row shows the Heart rate level , Stress levels , and Steps taken by the user
+      ---the 2nd row shows the :
+          1. Heart Rate vs Stress Trend
+	          •	Graph Type: Scatter Plot with Trend Line (Linear Regression)
+	          •	Purpose: To analyze the relationship between a user’s heart rate and their stress level.
+	          •	Why It’s Important:
+	            •	Detects overtraining or fatigue — high heart rate with high stress can indicate burnout.
+	            •	Helps in suggesting rest or low-intensity workouts if stress is consistently high.
+	            •	Trend line helps understand the general correlation (positive or negative) between the two.
+          2. Steps Count Distribution
+	          •	Graph Type: Histogram
+	          •	Purpose:To display how the user’s step counts are distributed over time (e.g., how many days they took 3000, 6000, 10000 steps, etc.).
+          	•	Why It’s Important:
+	          •	Shows if the user is maintaining an active lifestyle.
+          	•	Helps in understanding consistency — e.g., are they regularly walking enough?
+          	•	Based on this, AI can suggest improvements like short walks or jogs.
+      ---the 3rd row shows the : 
+          1. Calories Burned per Activity
+          	•	Graph Type: Boxplot
+          	•	Purpose:To compare how many calories are burned during different activity types (Gym, Yoga, Cycling, etc.).
+	          •	Why It’s Important:
+	            •	Shows which activities are most effective for calorie burning.
+	            •	Useful for recommending workouts based on user goals (weight loss, strength, endurance).
+	            •	Boxplot also shows the range and outliers in calories burned for each activity.
+          2.Fatigue Risk Analysis
+        	•	Graph Type: Scatter Plot (colored by Activity Type)
+        	•	Purpose:To visualize potential fatigue or stress risk by comparing heart rate and stress levels across activities.
+          •	Why It’s Important:
+          	•	Helps detect unsafe zones (e.g., high heart + high stress during intense workouts).
+          	•	Visualizes which activities are causing high physical strain.
+          	•	Supports AI logic in suggesting rest days or low-intensity alternatives.
+ 
+  -AI Recommendation : 
+          •showing AI-Driven personalised Suggestion based on the Dasboard.  
